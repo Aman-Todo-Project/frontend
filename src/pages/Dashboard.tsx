@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { AddTaskFab } from "../components/layout/AppHeader";
 import { Logo } from "../components/layout/Logo";
 import { Button } from "../components/common/Button";
@@ -18,7 +18,6 @@ import { useTaskActions } from "../context/TaskActionsContext";
 import arrowLeftIcon from "../assets/images/arrow-left.png";
 import {
   addDaysKey,
-  formatMonthYear,
   formatWeekRange,
   startOfWeekKey,
   toDateKey,
@@ -284,28 +283,6 @@ function Panel({ children }: { children: ReactNode }) {
     <section className="border border-border-input bg-white p-4 sm:p-6">
       {children}
     </section>
-  );
-}
-
-function WeekNavButton({
-  label,
-  onClick,
-  children,
-}: {
-  label: string;
-  onClick: () => void;
-  children: ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      title={label}
-      className="flex size-8 items-center justify-center text-text-label transition-colors hover:bg-card-complete hover:text-blue focus-visible:outline-2 focus-visible:outline-blue"
-    >
-      {children}
-    </button>
   );
 }
 
