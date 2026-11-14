@@ -9,7 +9,7 @@ interface CheckboxProps {
   disabled?: boolean;
 }
 
-/** Square checkbox from the Figma task list. */
+/** Figma task checkbox: 20px square, 1px blue border on white, thin blue tick when done. */
 export function Checkbox({ checked, onChange, label, loading = false, disabled = false }: CheckboxProps) {
   return (
     <button
@@ -23,15 +23,11 @@ export function Checkbox({ checked, onChange, label, loading = false, disabled =
         e.stopPropagation();
         onChange(!checked);
       }}
-      className={`flex size-5 shrink-0 items-center justify-center rounded-[4px] border-[1.5px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 ${
-        checked ? 'border-brand-600 bg-brand-600 text-white' : 'border-ink-400 bg-white text-transparent hover:border-brand-500'
+      className={`flex size-5 shrink-0 items-center justify-center border border-blue bg-white transition-colors hover:bg-card-complete focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue ${
+        checked ? 'text-blue' : 'text-transparent'
       }`}
     >
-      {loading ? (
-        <Spinner className={`size-3 ${checked ? 'text-white' : ''}`} />
-      ) : (
-        <Check className="size-3.5" strokeWidth={3} aria-hidden />
-      )}
+      {loading ? <Spinner className="size-3 text-blue" /> : <Check className="size-3.5" strokeWidth={1.75} aria-hidden />}
     </button>
   );
 }

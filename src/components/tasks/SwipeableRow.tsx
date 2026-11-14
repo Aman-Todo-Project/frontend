@@ -88,7 +88,7 @@ export function SwipeableRow({ children, onDelete, label }: SwipeableRowProps) {
             setOffset(0);
           }
         }}
-        className={`relative touch-pan-y bg-white ${dragging ? '' : 'transition-transform duration-200 ease-out'}`}
+        className={`relative touch-pan-y bg-page ${dragging ? '' : 'transition-transform duration-200 ease-out'}`}
         style={{ transform: `translateX(${offset}px)` }}
       >
         {children}

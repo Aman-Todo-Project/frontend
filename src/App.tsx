@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Provider } from "react-redux";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { store } from "./store";
 import { ToastProvider } from "./context/ToastContext";
 import { TaskActionsProvider } from "./context/TaskActionsContext";
@@ -20,8 +20,9 @@ export default function App() {
           <TaskActionsProvider>
             <Suspense fallback={<PageLoader />}>
               <Routes>
-                <Route path="/welcome" element={<Welcome />} />
-                <Route path="/" element={<Dashboard />} />
+                <Route path="/" element={<Welcome />} />
+                <Route path="/welcome" element={<Navigate to="/" replace />} />
+                <Route path="/tasks" element={<Dashboard />} />
                 <Route path="/search" element={<SearchPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>

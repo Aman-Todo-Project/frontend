@@ -1,6 +1,11 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { IconButton } from '../common/Button';
-import { formatMonthYear, parseDateKey, todayKey, weekDays } from '../../utils/date';
+import { useRef } from "react";
+import {
+  addDaysKey,
+  formatMonthYear,
+  parseDateKey,
+  todayKey,
+  weekDays,
+} from "../../utils/date";
 
 interface WeekStripProps {
   weekStart: string;
@@ -11,48 +16,97 @@ interface WeekStripProps {
   onNextWeek: () => void;
 }
 
-/** Mon–Sun day picker from the Figma home screen. */
-export function WeekStrip({ weekStart, selectedDay, daysWithTasks, onSelectDay, onPrevWeek, onNextWeek }: WeekStripProps) {
+const SWIPE_DISTANCE = 50;
+
+export function WeekStrip({
+  weekStart,
+  selectedDay,
+  daysWithTasks,
+  onSelectDay,
+  onPrevWeek,
+  onNextWeek,
+}: WeekStripProps) {
   const today = todayKey();
+  const startX = useRef<number | null>(null);
+  const swiped = useRef(false);
+
+  const hiddenNav =
+    "sr-only focus:not-sr-only focus:absolute focus:z-10 focus:bg-white focus:px-2 focus:py-1 focus:text-12 focus:text-blue focus:outline-2 focus:outline-blue";
 
   return (
-    <div>
-      <div className="mb-2 flex items-center justify-between">
-        <p className="text-sm font-semibold text-ink-900" aria-live="polite">
-          {formatMonthYear(selectedDay)}
-        </p>
-        <div className="flex">
-          <IconButton label="Previous week" onClick={onPrevWeek}>
-            <ChevronLeft className="size-5" />
-          </IconButton>
-          <IconButton label="Next week" onClick={onNextWeek}>
-            <ChevronRight className="size-5" />
-          </IconButton>
-        </div>
-      </div>
+    <div className="relative">
+      <button
+        type="button"
+        onClick={onPrevWeek}
+        className={`${hiddenNav} focus:left-0 focus:-top-7`}
+      >
+        Previous week
+      </button>
+      <button
+        type="button"
+        onClick={onNextWeek}
+        className={`${hiddenNav} focus:right-0 focus:-top-7`}
+      >
+        Next week
+      </button>
 
-      <div className="grid grid-cols-7 gap-1" role="group" aria-label="Choose a day">
-        {weekDays(weekStart).map((day) => {
+      <div
+        role="group"
+        aria-label={`Choose a day, ${formatMonthYear(selectedDay)}`}
+        className="-mx-[8.5px] flex touch-pan-y select-none justify-between"
+        onPointerDown={(e) => {
+          startX.current = e.clientX;
+        }}
+        onPointerUp={(e) => {
+          if (startX.current === null) return;
+          const dx = e.clientX - startX.current;
+          startX.current = null;
+          if (Math.abs(dx) < SWIPE_DISTANCE) return;
+          swiped.current = true;
+          if (dx < 0) onNextWeek();
+          else onPrevWeek();
+        }}
+        onPointerCancel={() => {
+          startX.current = null;
+        }}
+        onClickCapture={(e) => {
+          // A swipe that ends on a day must not also select it.
+          if (swiped.current) {
+            swiped.current = false;
+            e.stopPropagation();
+          }
+        }}
+      >
+        {[addDaysKey(weekStart, -1), ...weekDays(weekStart)].map((day) => {
           const date = parseDateKey(day);
           const selected = day === selectedDay;
           const isToday = day === today;
+          const color = selected
+            ? "bg-blue text-white"
+            : isToday
+              ? "text-blue"
+              : "text-text-day hover:text-text-label";
           return (
             <button
               key={day}
               type="button"
               aria-pressed={selected}
-              aria-label={date.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}
+              aria-label={date.toLocaleDateString(undefined, {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+              })}
               onClick={() => onSelectDay(day)}
-              className={`flex flex-col items-center gap-1 rounded-md py-2.5 text-xs transition-colors focus-visible:outline-2 focus-visible:outline-brand-500 ${
-                selected ? 'bg-brand-600 text-white' : isToday ? 'text-brand-600 hover:bg-brand-50' : 'text-ink-400 hover:bg-ink-100'
-              }`}
+              className={`flex h-15.75 w-9.75 flex-col items-center transition-colors ${selected ? "pt-1.5" : "pt-2"} focus-visible:outline-2 focus-visible:outline-blue ${color}`}
             >
-              <span>{date.toLocaleDateString(undefined, { weekday: 'short' })}</span>
-              <span className={`text-sm font-semibold ${selected ? 'text-white' : isToday ? 'text-brand-600' : 'text-ink-700'}`}>
-                {String(date.getDate()).padStart(2, '0')}
+              <span className="text-10 leading-5.5">
+                {date.toLocaleDateString(undefined, { weekday: "short" })}
+              </span>
+              <span className="text-14 leading-5.25">
+                {String(date.getDate()).padStart(2, "0")}
               </span>
               <span
-                className={`size-1 rounded-full ${daysWithTasks.has(day) ? (selected ? 'bg-white' : 'bg-brand-600') : 'bg-transparent'}`}
+                className={`mt-1.25 size-1 rounded-full ${daysWithTasks.has(day) ? (selected ? "bg-white" : "bg-blue") : "bg-transparent"}`}
                 aria-hidden
               />
             </button>

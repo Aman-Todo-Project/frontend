@@ -3,8 +3,9 @@ import { Button } from '../common/Button';
 import { SearchLink } from '../common/SearchInput';
 import { useTaskActions } from '../../context/TaskActionsContext';
 import { Logo } from './Logo';
+import plusIcon from '../../assets/images/Plus.png';
 
-/** Top bar. Phones get the Figma layout (search in the page, + button at the bottom); desktops get search + Add Task here. */
+/** Desktop top bar (used by the search page on large screens). */
 export function AppHeader({ showSearch = true }: { showSearch?: boolean }) {
   const { openCreate } = useTaskActions();
 
@@ -28,7 +29,7 @@ export function AppHeader({ showSearch = true }: { showSearch?: boolean }) {
   );
 }
 
-/** Round "+" button centred at the bottom of the screen on phones (Figma). */
+/** Figma "+" button: 76px blue circle, centred, 28px above the bottom of the screen. */
 export function AddTaskFab() {
   const { openCreate } = useTaskActions();
   return (
@@ -36,9 +37,9 @@ export function AddTaskFab() {
       type="button"
       onClick={() => openCreate()}
       aria-label="Add task"
-      className="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] left-1/2 z-20 flex size-14 -translate-x-1/2 items-center justify-center rounded-full bg-brand-600 text-white shadow-float transition-transform hover:bg-brand-700 active:scale-95 lg:hidden"
+      className="fixed bottom-[max(28px,env(safe-area-inset-bottom))] left-1/2 z-20 flex size-19 -translate-x-1/2 items-center justify-center rounded-full bg-blue transition-transform hover:bg-blue/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue active:scale-95 active:bg-dark-blue"
     >
-      <Plus className="size-7" strokeWidth={2.25} />
+      <img src={plusIcon} alt="" aria-hidden className="size-8.25" />
     </button>
   );
 }

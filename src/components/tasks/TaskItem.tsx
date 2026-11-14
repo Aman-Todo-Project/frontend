@@ -1,68 +1,106 @@
-import { CalendarDays, Clock, SquarePen, Trash2 } from 'lucide-react';
-import type { Task } from '../../types/task';
-import { formatDate, formatTime, isOverdue } from '../../utils/date';
-import { Checkbox } from '../common/Checkbox';
-import { IconButton } from '../common/Button';
-import { PriorityBadge, StatusBadge } from '../common/Badges';
-import { useTaskActions } from '../../context/TaskActionsContext';
-import { useTasks } from '../../hooks/useTasks';
-import { SwipeableRow } from './SwipeableRow';
+import { CalendarDays, Clock } from "lucide-react";
+import type { Task } from "../../types/task";
+import { formatDate, formatTime, isOverdue } from "../../utils/date";
+import { Checkbox } from "../common/Checkbox";
+import { PriorityBadge, StatusBadge } from "../common/Badges";
+import { useTaskActions } from "../../context/TaskActionsContext";
+import { useTasks } from "../../hooks/useTasks";
+import { SwipeableRow } from "./SwipeableRow";
+import trashIcon from "../../assets/images/trash.png";
+import editIcon from "../../assets/images/edit.png";
 
 interface TaskItemProps {
   task: Task;
-  /** Hide the date when the list is already for a single day. */
+  /** Show date/time/priority/status under the title (search results). The Figma rows show the title only. */
+  details?: boolean;
+  /** With `details`, hide the date when the list is already for a single day. */
   showDate?: boolean;
 }
 
-/** A single row from the Figma task list: checkbox · title · delete · edit. */
-export function TaskItem({ task, showDate = true }: TaskItemProps) {
+const iconButton =
+  "flex size-6 items-center justify-center transition-opacity hover:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue";
+
+/**
+ * Figma task row (64px): checkbox · title · trash · edit, with a divider that starts
+ * under the title. Tap the title to see the full task.
+ */
+export function TaskItem({
+  task,
+  details = false,
+  showDate = true,
+}: TaskItemProps) {
   const { openView, openEdit, confirmDelete, toggleStatus } = useTaskActions();
   const { pendingStatusIds } = useTasks();
-  const done = task.status === 'Completed';
+  const done = task.status === "Completed";
   const overdue = isOverdue(task.scheduledAt, task.status);
 
   return (
-    <li className="border-b border-ink-100 last:border-b-0">
+    <li>
       <SwipeableRow onDelete={() => confirmDelete(task)} label={task.title}>
-        <div className="flex items-start gap-3 py-3.5">
-          <div className="pt-0.5">
-            <Checkbox
-              checked={done}
-              loading={pendingStatusIds.has(task.id)}
-              onChange={() => toggleStatus(task)}
-              label={done ? `Mark "${task.title}" as in progress` : `Mark "${task.title}" as completed`}
-            />
-          </div>
+        <div className="flex items-start gap-3 min-h-10 mt-4.75">
+          <Checkbox
+            checked={done}
+            loading={pendingStatusIds.has(task.id)}
+            onChange={() => toggleStatus(task)}
+            label={
+              done
+                ? `Mark "${task.title}" as in progress`
+                : `Mark "${task.title}" as completed`
+            }
+          />
 
-          <button type="button" onClick={() => openView(task)} className="min-w-0 flex-1 text-left focus-visible:outline-none">
-            <span className={`block truncate text-sm font-medium ${done ? 'text-ink-400 line-through' : 'text-ink-900'}`}>
-              {task.title}
-            </span>
-            {task.description && <span className="mt-0.5 block truncate text-xs text-ink-500">{task.description}</span>}
-            <span className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-[11px] text-ink-500">
-              {showDate && (
-                <span className="inline-flex items-center gap-1">
-                  <CalendarDays className="size-3.5" aria-hidden />
-                  {formatDate(task.scheduledAt)}
+          <div className="flex min-w-0 flex-1 items-center gap-3 pb-4 border-b border-divider ">
+            <button
+              type="button"
+              onClick={() => openView(task)}
+              className="min-w-0 flex-1 text-left focus-visible:outline-none"
+            >
+              <span
+                className={`block truncate text-14 font-medium text-text-placeholder ${done ? "line-through" : ""}`}
+              >
+                {task.title}
+              </span>
+              {details && (
+                <span className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-[11px] text-text-label">
+                  {showDate && (
+                    <span className="inline-flex items-center gap-1">
+                      <CalendarDays className="size-3.5" aria-hidden />
+                      {formatDate(task.scheduledAt)}
+                    </span>
+                  )}
+                  <span
+                    className={`inline-flex items-center gap-1 ${overdue ? "font-medium text-red-600" : ""}`}
+                  >
+                    <Clock className="size-3.5" aria-hidden />
+                    {formatTime(task.scheduledAt)}
+                    {overdue && " · Overdue"}
+                  </span>
+                  <PriorityBadge priority={task.priority} />
+                  <StatusBadge status={task.status} />
                 </span>
               )}
-              <span className={`inline-flex items-center gap-1 ${overdue ? 'font-medium text-red-600' : ''}`}>
-                <Clock className="size-3.5" aria-hidden />
-                {formatTime(task.scheduledAt)}
-                {overdue && ' · Overdue'}
-              </span>
-              <PriorityBadge priority={task.priority} />
-              <StatusBadge status={task.status} />
-            </span>
-          </button>
+            </button>
 
-          <div className="-my-1 flex shrink-0 items-center">
-            <IconButton label={`Delete "${task.title}"`} tone="danger" onClick={() => confirmDelete(task)}>
-              <Trash2 className="size-[18px]" />
-            </IconButton>
-            <IconButton label={`Edit "${task.title}"`} onClick={() => openEdit(task)}>
-              <SquarePen className="size-[18px]" />
-            </IconButton>
+            <div className="-mr-0.25 flex shrink-0 -translate-y-0.5 items-center gap-2.75">
+              <button
+                type="button"
+                aria-label={`Delete "${task.title}"`}
+                title="Delete"
+                onClick={() => confirmDelete(task)}
+                className={iconButton}
+              >
+                <img src={trashIcon} alt="" aria-hidden className="size-6" />
+              </button>
+              <button
+                type="button"
+                aria-label={`Edit "${task.title}"`}
+                title="Edit"
+                onClick={() => openEdit(task)}
+                className={iconButton}
+              >
+                <img src={editIcon} alt="" aria-hidden className="size-6" />
+              </button>
+            </div>
           </div>
         </div>
       </SwipeableRow>
@@ -70,11 +108,24 @@ export function TaskItem({ task, showDate = true }: TaskItemProps) {
   );
 }
 
-export function TaskList({ tasks, showDate = true }: { tasks: Task[]; showDate?: boolean }) {
+export function TaskList({
+  tasks,
+  details = false,
+  showDate = true,
+}: {
+  tasks: Task[];
+  details?: boolean;
+  showDate?: boolean;
+}) {
   return (
     <ul>
       {tasks.map((task) => (
-        <TaskItem key={task.id} task={task} showDate={showDate} />
+        <TaskItem
+          key={task.id}
+          task={task}
+          details={details}
+          showDate={showDate}
+        />
       ))}
     </ul>
   );

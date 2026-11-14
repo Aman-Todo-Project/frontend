@@ -19,7 +19,7 @@ export default function SearchPage() {
   const { results, loading, error, retry } = useTaskSearch(debounced);
 
   const setQuery = (value: string) => setParams(value ? { q: value } : {}, { replace: true });
-  const goBack = () => ((window.history.state?.idx ?? 0) > 0 ? navigate(-1) : navigate('/'));
+  const goBack = () => ((window.history.state?.idx ?? 0) > 0 ? navigate(-1) : navigate('/tasks'));
 
   let body;
   if (!debounced) {
@@ -45,7 +45,7 @@ export default function SearchPage() {
           {results.length} {results.length === 1 ? 'result' : 'results'} for “{debounced}”
           {loading && <Spinner className="size-3.5" />}
         </p>
-        <TaskList tasks={results} />
+        <TaskList tasks={results} details />
       </>
     );
   }

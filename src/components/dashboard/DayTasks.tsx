@@ -25,13 +25,13 @@ export function DayTasks({ day, tasks, onViewAll }: DayTasksProps) {
         id="day-tasks-heading"
         title={`Tasks ${label === 'Today' || label === 'Tomorrow' || label === 'Yesterday' ? label : `on ${label}`}`}
         action={
-          <Button variant="link" size="sm" onClick={onViewAll}>
+          <Button variant="link" size="sm" className="translate-y-0.5" onClick={onViewAll}>
             View All
           </Button>
         }
       />
       {tasks.length ? (
-        <TaskList tasks={tasks} showDate={false} />
+        <TaskList tasks={tasks} />
       ) : (
         <EmptyState
           compact

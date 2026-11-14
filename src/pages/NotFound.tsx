@@ -10,7 +10,7 @@ export default function NotFound() {
       <h1 className="mt-4 text-2xl font-semibold text-ink-900">Page not found</h1>
       <p className="mt-1 text-sm text-ink-500">The page you're looking for doesn't exist.</p>
       <Link
-        to="/"
+        to="/tasks"
         className="mt-6 inline-flex h-11 items-center rounded-md bg-brand-600 px-5 text-sm font-semibold text-white hover:bg-brand-700"
       >
         Back to my tasks

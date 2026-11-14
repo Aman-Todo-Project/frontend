@@ -3,7 +3,7 @@ import { Check } from 'lucide-react';
 
 export function Logo() {
   return (
-    <Link to="/" className="flex shrink-0 items-center gap-2.5" aria-label="TaskFlow home">
+    <Link to="/tasks" className="flex shrink-0 items-center gap-2.5" aria-label="TaskFlow home">
       <span className="flex size-9 items-center justify-center rounded-md bg-brand-600 text-white">
         <Check className="size-5" strokeWidth={3} aria-hidden />
       </span>
