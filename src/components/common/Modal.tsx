@@ -12,8 +12,8 @@ interface ModalProps {
   /** Prevent closing via backdrop / Escape (e.g. while saving). */
   dismissible?: boolean;
   /**
-   * Every modal is a bottom sheet docked to the phone column: it slides up on open
-   * and back down on close, on all screen sizes.
+   * Phone (< 576px): bottom sheet that slides up on open and back down on close.
+   * Desktop (>= 576px): centered dialog that pops in and fades out.
    * 'dialog' (default): rounded top corners with a drag handle.
    * 'sheet': the Figma "Add New Task" look (square corners, no handle).
    */
@@ -134,7 +134,7 @@ export function Modal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center"
+      className="fixed inset-0 z-50 flex items-end justify-center desktop:items-center desktop:p-6"
     >
       <div
         className={`absolute inset-0 bg-black/25 ${isLeaving ? 'animate-fade-out' : 'animate-fade-in'}`}
@@ -154,11 +154,15 @@ export function Modal({
             onCloseRef.current();
           }
         }}
-        className={`relative flex max-h-[92dvh] w-full max-w-97.5 flex-col bg-white ${isSheet ? '' : 'rounded-t-2xl shadow-2xl'} ${
-          isLeaving ? 'pointer-events-none animate-sheet-down' : 'animate-sheet-up'
+        className={`relative flex max-h-[92dvh] w-full max-w-97.5 flex-col bg-white desktop:max-h-[calc(100dvh-3rem)] desktop:max-w-120 desktop:shadow-2xl ${
+          isSheet ? '' : 'rounded-t-2xl shadow-2xl desktop:rounded-xl'
+        } ${
+          isLeaving
+            ? 'pointer-events-none animate-sheet-down desktop:animate-pop-out'
+            : 'animate-sheet-up desktop:animate-pop-in'
         }`}
       >
-        {!isSheet && <div className="mx-auto mt-2.5 h-1 w-10 shrink-0 rounded-full bg-ink-200" aria-hidden />}
+        {!isSheet && <div className="mx-auto mt-2.5 h-1 w-10 shrink-0 rounded-full bg-ink-200 desktop:hidden" aria-hidden />}
         {header}
         <div className={isSheet ? 'overflow-y-auto px-6' : 'overflow-y-auto px-5 pb-4 pt-2'}>{children}</div>
         {footer && (

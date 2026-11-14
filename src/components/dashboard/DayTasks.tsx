@@ -11,6 +11,8 @@ import { TaskList } from '../tasks/TaskItem';
 interface DayTasksProps {
   day: string;
   tasks: Task[];
+  /** Desktop: show time, priority and status under each title. */
+  details?: boolean;
 }
 
 /** Rows shown before "View All". */
@@ -21,7 +23,7 @@ const VISIBLE_TASKS = 4;
  * Shows the first few tasks; "View All" adds the rest to the same list, which then
  * scrolls inside its own box. Remount (key by day) to collapse it again.
  */
-export function DayTasks({ day, tasks }: DayTasksProps) {
+export function DayTasks({ day, tasks, details = false }: DayTasksProps) {
   const { openCreate } = useTaskActions();
   const label = formatDayLabel(day);
   const isPast = day < todayKey();
@@ -57,7 +59,7 @@ export function DayTasks({ day, tasks }: DayTasksProps) {
           tabIndex={showAll ? 0 : undefined}
           aria-label={showAll ? 'All tasks for this day' : undefined}
         >
-          <TaskList tasks={visible} />
+          <TaskList tasks={visible} details={details} showDate={false} />
         </div>
       ) : (
         <EmptyState
