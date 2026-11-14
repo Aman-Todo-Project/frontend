@@ -5,7 +5,10 @@ export interface TaskFormValues {
   title: string;
   description: string;
   date: string;
+  /** Start time (HH:mm). */
   time: string;
+  /** Optional end time (HH:mm), same day as `date`. */
+  endTime: string;
   priority: Priority;
 }
 
@@ -49,6 +52,11 @@ export function validateTaskForm(values: TaskFormValues, { now = new Date(), ori
       if (values.date < today) errors.date = 'This date has passed. Please choose today or a future date.';
       else errors.time = 'Please choose a time later than now.';
     }
+  }
+
+  if (values.endTime) {
+    if (!/^\d{2}:\d{2}$/.test(values.endTime)) errors.endTime = 'Please enter a valid end time.';
+    else if (values.time && values.endTime <= values.time) errors.endTime = 'End time must be after the start time.';
   }
 
   if (!PRIORITIES.includes(values.priority)) errors.priority = 'Please choose a priority.';

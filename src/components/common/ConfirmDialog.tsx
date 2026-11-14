@@ -14,6 +14,8 @@ interface ConfirmDialogProps {
 
 export function ConfirmDialog({ open, title, message, confirmLabel = 'Delete', onConfirm, onClose }: ConfirmDialogProps) {
   const [busy, setBusy] = useState(false);
+  /** Cancel pressed: slide the sheet down, then close. */
+  const [closing, setClosing] = useState(false);
 
   const handleConfirm = async () => {
     setBusy(true);
@@ -27,13 +29,16 @@ export function ConfirmDialog({ open, title, message, confirmLabel = 'Delete', o
   return (
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={() => {
+        setClosing(false);
+        onClose();
+      }}
+      closing={closing}
       title={title}
-      size="sm"
       dismissible={!busy}
       footer={
         <>
-          <Button variant="secondary" className="flex-1" onClick={onClose} disabled={busy} data-autofocus>
+          <Button variant="secondary" className="flex-1" onClick={() => setClosing(true)} disabled={busy} data-autofocus>
             Cancel
           </Button>
           <Button variant="danger" className="flex-1" onClick={handleConfirm} loading={busy}>

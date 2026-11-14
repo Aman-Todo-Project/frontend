@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
@@ -9,15 +9,40 @@ interface ModalProps {
   description?: string;
   children: ReactNode;
   footer?: ReactNode;
-  size?: 'sm' | 'md';
   /** Prevent closing via backdrop / Escape (e.g. while saving). */
   dismissible?: boolean;
+  /**
+   * Every modal is a bottom sheet docked to the phone column: it slides up on open
+   * and back down on close, on all screen sizes.
+   * 'dialog' (default): rounded top corners with a drag handle.
+   * 'sheet': the Figma "Add New Task" look (square corners, no handle).
+   */
+  variant?: 'dialog' | 'sheet';
+  /** Set to true to play the slide-down animation, then `onClose` is called. */
+  closing?: boolean;
 }
 
 let openModals = 0;
 
 /** Bottom sheet on mobile, centered dialog on larger screens. */
-export function Modal({ open, onClose, title, description, children, footer, size = 'md', dismissible = true }: ModalProps) {
+export function Modal({
+  open,
+  onClose,
+  title,
+  description,
+  children,
+  footer,
+  dismissible = true,
+  variant = 'dialog',
+  closing = false,
+}: ModalProps) {
+  const isSheet = variant === 'sheet';
+  const [leaving, setLeaving] = useState(false);
+  const isLeaving = leaving || closing;
+  /** Close request from the X button, backdrop or Escape: slide down first, then close. */
+  const requestClose = () => setLeaving(true);
+  const requestCloseRef = useRef(requestClose);
+  requestCloseRef.current = requestClose;
   const titleId = useId();
   const descId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
@@ -44,7 +69,7 @@ export function Modal({ open, onClose, title, description, children, footer, siz
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && dismissibleRef.current) {
         e.stopPropagation();
-        onCloseRef.current();
+        requestCloseRef.current();
       }
       if (e.key === 'Tab' && panel) {
         const focusables = panel.querySelectorAll<HTMLElement>(
@@ -79,11 +104,41 @@ export function Modal({ open, onClose, title, description, children, footer, siz
 
   if (!open) return null;
 
+  const header = (
+    <div className={isSheet ? 'flex items-center justify-between gap-4 px-6 pb-7 pt-7' : 'flex items-start justify-between gap-4 px-5 pb-2 pt-4'}>
+      <div>
+        <h2 id={titleId} className={isSheet ? 'text-18 font-medium leading-6.75 text-black' : 'text-lg font-semibold text-ink-900'}>
+          {title}
+        </h2>
+        {description && (
+          <p id={descId} className="mt-1 text-sm text-ink-500">
+            {description}
+          </p>
+        )}
+      </div>
+      <button
+        type="button"
+        onClick={requestClose}
+        disabled={!dismissible}
+        className={
+          isSheet
+            ? '-mr-1.5 p-1.5 text-black transition-opacity hover:opacity-70 focus-visible:outline-2 focus-visible:outline-blue disabled:opacity-40'
+            : '-mr-2 -mt-1 rounded-md p-2 text-ink-700 transition-colors hover:bg-ink-100 hover:text-ink-900 disabled:opacity-40'
+        }
+        aria-label="Close dialog"
+      >
+        <X className="size-5" strokeWidth={isSheet ? 1.75 : 2} />
+      </button>
+    </div>
+  );
+
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-6">
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center"
+    >
       <div
-        className="absolute inset-0 animate-fade-in bg-ink-900/40 backdrop-blur-[2px]"
-        onClick={() => dismissible && onClose()}
+        className={`absolute inset-0 bg-black/25 ${isLeaving ? 'animate-fade-out' : 'animate-fade-in'}`}
+        onClick={() => dismissible && !isLeaving && requestClose()}
         aria-hidden
       />
       <div
@@ -92,35 +147,28 @@ export function Modal({ open, onClose, title, description, children, footer, siz
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={description ? descId : undefined}
-        className={`relative flex max-h-[92dvh] w-full animate-sheet-up flex-col rounded-t-2xl bg-white shadow-2xl sm:animate-pop-in sm:rounded-xl ${
-          size === 'sm' ? 'sm:max-w-sm' : 'sm:max-w-lg'
+        onAnimationEnd={(e) => {
+          // Unmount only after the slide-down finished (ignore animations of children).
+          if (isLeaving && e.target === e.currentTarget) {
+            setLeaving(false); // ready for the next open (dialogs that stay mounted, e.g. ConfirmDialog)
+            onCloseRef.current();
+          }
+        }}
+        className={`relative flex max-h-[92dvh] w-full max-w-97.5 flex-col bg-white ${isSheet ? '' : 'rounded-t-2xl shadow-2xl'} ${
+          isLeaving ? 'pointer-events-none animate-sheet-down' : 'animate-sheet-up'
         }`}
       >
-        <div className="mx-auto mt-2.5 h-1 w-10 shrink-0 rounded-full bg-ink-200 sm:hidden" aria-hidden />
-        <div className="flex items-start justify-between gap-4 px-5 pb-2 pt-4 sm:px-6 sm:pt-6">
-          <div>
-            <h2 id={titleId} className="text-lg font-semibold text-ink-900">
-              {title}
-            </h2>
-            {description && (
-              <p id={descId} className="mt-1 text-sm text-ink-500">
-                {description}
-              </p>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={!dismissible}
-            className="-mr-2 -mt-1 rounded-md p-2 text-ink-700 transition-colors hover:bg-ink-100 hover:text-ink-900 disabled:opacity-40"
-            aria-label="Close dialog"
-          >
-            <X className="size-5" />
-          </button>
-        </div>
-        <div className="overflow-y-auto px-5 pb-4 pt-2 sm:px-6">{children}</div>
+        {!isSheet && <div className="mx-auto mt-2.5 h-1 w-10 shrink-0 rounded-full bg-ink-200" aria-hidden />}
+        {header}
+        <div className={isSheet ? 'overflow-y-auto px-6' : 'overflow-y-auto px-5 pb-4 pt-2'}>{children}</div>
         {footer && (
-          <div className="flex shrink-0 gap-3 border-t border-ink-100 px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6">
+          <div
+            className={
+              isSheet
+                ? 'flex shrink-0 gap-3 px-6 pb-[max(2rem,env(safe-area-inset-bottom))] pt-9'
+                : 'flex shrink-0 gap-3 border-t border-ink-100 px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]'
+            }
+          >
             {footer}
           </div>
         )}

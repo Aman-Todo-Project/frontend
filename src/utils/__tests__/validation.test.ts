@@ -10,6 +10,7 @@ const valid: TaskFormValues = {
   description: '',
   date: '2026-11-13',
   time: '10:30',
+  endTime: '',
   priority: 'Medium',
 };
 
@@ -19,6 +20,13 @@ const check = (values: Partial<TaskFormValues>, originalScheduledAt?: string) =>
 describe('validateTaskForm', () => {
   it('accepts a valid form', () => {
     expect(hasErrors(check({}))).toBe(false);
+  });
+
+  it('accepts an empty end time, and rejects one not after the start', () => {
+    expect(check({ endTime: '' }).endTime).toBeUndefined();
+    expect(check({ endTime: '11:00' }).endTime).toBeUndefined();
+    expect(check({ endTime: '10:30' }).endTime).toBeDefined();
+    expect(check({ endTime: '09:00' }).endTime).toBeDefined();
   });
 
   it('requires a non-blank title', () => {

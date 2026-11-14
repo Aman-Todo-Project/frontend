@@ -1,5 +1,4 @@
 import type { Ref } from 'react';
-import { Link } from 'react-router-dom';
 import { X } from 'lucide-react';
 import searchIcon from '../../assets/images/Search.png';
 
@@ -11,19 +10,28 @@ interface SearchInputProps {
   value: string;
   onChange: (value: string) => void;
   autoFocus?: boolean;
+  onFocus?: () => void;
+  /** Escape on an empty field (Escape first clears the text). */
+  onEscape?: () => void;
   ref?: Ref<HTMLInputElement>;
 }
 
-export function SearchInput({ value, onChange, autoFocus, ref }: SearchInputProps) {
+export function SearchInput({ value, onChange, autoFocus, onFocus, onEscape, ref }: SearchInputProps) {
   return (
-    <div className={`${shell} focus-within:border-blue focus-within:ring-4 focus-within:ring-blue/10`}>
+    <div className={`${shell} focus-within:border-blue`}>
       <input
         ref={ref}
         type="search"
         value={value}
         autoFocus={autoFocus}
         onChange={(e) => onChange(e.target.value)}
-        onKeyDown={(e) => e.key === 'Escape' && onChange('')}
+        onFocus={onFocus}
+        onKeyDown={(e) => {
+          if (e.key !== 'Escape') return;
+          e.preventDefault();
+          if (value) onChange('');
+          else onEscape?.();
+        }}
         placeholder="Search for a task"
         aria-label="Search tasks by title or description"
         className="h-full min-w-0 flex-1 bg-transparent text-text-placeholder placeholder:text-text-muted focus:outline-none"
@@ -31,28 +39,17 @@ export function SearchInput({ value, onChange, autoFocus, ref }: SearchInputProp
       {value ? (
         <button
           type="button"
+          // Keep focus in the field so the keyboard stays open after clearing.
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => onChange('')}
-          className="flex size-8 items-center justify-center rounded-md text-text-muted hover:bg-ink-100 hover:text-text-placeholder"
           aria-label="Clear search"
+          className="-mr-1 flex size-8 shrink-0 items-center justify-center text-text-placeholder transition-opacity hover:opacity-60 focus-visible:outline-2 focus-visible:outline-blue"
         >
-          <X className="size-4" />
+          <X className="size-5" strokeWidth={1.75} />
         </button>
       ) : (
-        <img src={searchIcon} alt="" aria-hidden className="size-6" />
+        <img src={searchIcon} alt="" aria-hidden className="size-6 shrink-0" />
       )}
     </div>
-  );
-}
-
-/** Looks like the search bar but navigates to the search page. */
-export function SearchLink({ className = '' }: { className?: string }) {
-  return (
-    <Link
-      to="/search"
-      className={`${shell} justify-between text-text-muted hover:border-text-day focus-visible:outline-2 focus-visible:outline-blue ${className}`}
-    >
-      <span>Search for a task</span>
-      <img src={searchIcon} alt="" aria-hidden className="size-6" />
-    </Link>
   );
 }

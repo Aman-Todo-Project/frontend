@@ -15,6 +15,11 @@ interface TaskItemProps {
   details?: boolean;
   /** With `details`, hide the date when the list is already for a single day. */
   showDate?: boolean;
+  /**
+   * Search suggestions: the task can only be checked / unchecked. No edit or delete
+   * icons, no swipe-to-delete, and tapping the title toggles it too.
+   */
+  checkOnly?: boolean;
 }
 
 const iconButton =
@@ -28,15 +33,14 @@ export function TaskItem({
   task,
   details = false,
   showDate = true,
+  checkOnly = false,
 }: TaskItemProps) {
   const { openView, openEdit, confirmDelete, toggleStatus } = useTaskActions();
   const { pendingStatusIds } = useTasks();
   const done = task.status === "Completed";
   const overdue = isOverdue(task.scheduledAt, task.status);
 
-  return (
-    <li>
-      <SwipeableRow onDelete={() => confirmDelete(task)} label={task.title}>
+  const row = (
         <div className="flex items-start gap-3 min-h-10 mt-4.75">
           <Checkbox
             checked={done}
@@ -52,7 +56,9 @@ export function TaskItem({
           <div className="flex min-w-0 flex-1 items-center gap-3 pb-4 border-b border-divider ">
             <button
               type="button"
-              onClick={() => openView(task)}
+              onClick={() => (checkOnly ? toggleStatus(task) : openView(task))}
+              tabIndex={checkOnly ? -1 : undefined}
+              aria-hidden={checkOnly || undefined}
               className="min-w-0 flex-1 text-left focus-visible:outline-none"
             >
               <span
@@ -73,6 +79,7 @@ export function TaskItem({
                   >
                     <Clock className="size-3.5" aria-hidden />
                     {formatTime(task.scheduledAt)}
+                    {task.endAt && ` – ${formatTime(task.endAt)}`}
                     {overdue && " · Overdue"}
                   </span>
                   <PriorityBadge priority={task.priority} />
@@ -81,6 +88,7 @@ export function TaskItem({
               )}
             </button>
 
+            {!checkOnly && (
             <div className="-mr-0.25 flex shrink-0 -translate-y-0.5 items-center gap-2.75">
               <button
                 type="button"
@@ -101,9 +109,20 @@ export function TaskItem({
                 <img src={editIcon} alt="" aria-hidden className="size-6" />
               </button>
             </div>
+            )}
           </div>
         </div>
-      </SwipeableRow>
+  );
+
+  return (
+    <li>
+      {checkOnly ? (
+        row
+      ) : (
+        <SwipeableRow onDelete={() => confirmDelete(task)} label={task.title}>
+          {row}
+        </SwipeableRow>
+      )}
     </li>
   );
 }
@@ -112,19 +131,24 @@ export function TaskList({
   tasks,
   details = false,
   showDate = true,
+  checkOnly = false,
+  className,
 }: {
   tasks: Task[];
   details?: boolean;
   showDate?: boolean;
+  checkOnly?: boolean;
+  className?: string;
 }) {
   return (
-    <ul>
+    <ul className={className}>
       {tasks.map((task) => (
         <TaskItem
           key={task.id}
           task={task}
           details={details}
           showDate={showDate}
+          checkOnly={checkOnly}
         />
       ))}
     </ul>

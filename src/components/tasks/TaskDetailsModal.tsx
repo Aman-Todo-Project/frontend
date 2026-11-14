@@ -60,7 +60,9 @@ export function TaskDetailsModal({ task, onClose, onEdit, onDelete, onStatusChan
             <dt className="flex items-center gap-1.5 text-xs text-ink-500">
               <Clock className="size-3.5" aria-hidden /> Time
             </dt>
-            <dd className="mt-1 text-sm font-medium text-ink-900">{formatTime(task.scheduledAt)}</dd>
+            <dd className="mt-1 text-sm font-medium text-ink-900">{formatTime(task.scheduledAt)}
+              {task.endAt && ` – ${formatTime(task.endAt)}`}
+            </dd>
           </div>
         </dl>
 

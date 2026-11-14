@@ -9,6 +9,7 @@ export interface Task {
   title: string;
   description: string;
   scheduledAt: string; // ISO 8601 (UTC)
+  endAt?: string | null; // ISO 8601 (UTC), optional
   priority: Priority;
   status: TaskStatus;
   createdAt: string;
@@ -19,6 +20,7 @@ export interface TaskInput {
   title: string;
   description?: string;
   scheduledAt: string;
+  endAt?: string | null;
   priority?: Priority;
 }
 

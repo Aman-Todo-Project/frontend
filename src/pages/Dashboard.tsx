@@ -1,13 +1,15 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { AddTaskFab } from "../components/layout/AppHeader";
 import { Skeleton } from "../components/common/Loader";
 import { ErrorState } from "../components/common/States";
-import { SearchLink } from "../components/common/SearchInput";
+import { SearchInput } from "../components/common/SearchInput";
+import { SearchResults } from "../components/dashboard/SearchResults";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import arrowLeftIcon from "../assets/images/arrow-left.png";
 import { WeekStrip } from "../components/dashboard/WeekStrip";
 import { StatCards } from "../components/dashboard/StatCards";
 import { WeeklyProgress } from "../components/dashboard/WeeklyProgress";
 import { DayTasks } from "../components/dashboard/DayTasks";
-import { WeekList } from "../components/dashboard/WeekList";
 import { useTasks } from "../hooks/useTasks";
 import {
   addDaysKey,
@@ -20,13 +22,33 @@ import {
 /*
  * Home (tasks) screen, matched to the Figma frame (390×844, same phone column as Welcome):
  * search · day strip · stat cards · weekly progress · tasks for the selected day · "+" button.
- * "View All" reveals every week's tasks below (hidden by default, as in the Figma).
+ * "View All" adds the day's remaining tasks to the same (then scrollable) list.
  */
 export default function Dashboard() {
   const { weeks, loading, error, refresh } = useTasks();
   const [selectedDay, setSelectedDay] = useState(todayKey);
-  const allWeeksRef = useRef<HTMLDivElement>(null);
-  const [showAllWeeks, setShowAllWeeks] = useState(false);
+
+  // Search happens in place: tapping the bar switches the screen to its search state
+  // (back arrow + suggestions). Kept in the URL so the phone's back button closes it.
+  const [params, setParams] = useSearchParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const searching = params.has("search");
+  const query = params.get("search") ?? "";
+  const searchPushed = Boolean(
+    (location.state as { searchPushed?: boolean } | null)?.searchPushed,
+  );
+  const openSearch = () => {
+    if (!searching) setParams({ search: "" }, { state: { searchPushed: true } });
+  };
+  const setQuery = (value: string) =>
+    setParams({ search: value }, { replace: true, state: location.state });
+  const closeSearch = () => {
+    // Drop focus so the next tap on the bar opens search again.
+    (document.activeElement as HTMLElement | null)?.blur();
+    if (searchPushed) navigate(-1);
+    else setParams({}, { replace: true });
+  };
 
   const weekStart = startOfWeekKey(selectedDay);
   const weekEnd = addDaysKey(weekStart, 6);
@@ -57,19 +79,31 @@ export default function Dashboard() {
     setSelectedDay(startOfWeekKey(today) === target ? today : target);
   };
 
-  // Scroll once the list has rendered.
-  useEffect(() => {
-    if (showAllWeeks)
-      allWeeksRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-  }, [showAllWeeks]);
-
   return (
     <div className="mx-auto min-h-dvh w-full max-w-97.5 bg-page">
-      <main className="px-6 pb-36 pt-9.25">
-        <SearchLink />
+      <main className={`px-6 pb-36 ${searching ? "pt-7.75" : "pt-9.25"}`}>
+        {searching && (
+          <button
+            type="button"
+            onClick={closeSearch}
+            aria-label="Close search"
+            className="-ml-0.5 mb-7 flex size-6 items-center justify-center transition-opacity hover:opacity-60 focus-visible:outline-2 focus-visible:outline-blue"
+          >
+            <img src={arrowLeftIcon} alt="" aria-hidden className="size-6" />
+          </button>
+        )}
+        <SearchInput
+          value={query}
+          onChange={setQuery}
+          onFocus={openSearch}
+          onEscape={closeSearch}
+          autoFocus={searching}
+        />
+
+        {searching ? (
+          <SearchResults query={query} />
+        ) : (
+        <>
 
         <div className="mt-3">
           <WeekStrip
@@ -123,32 +157,15 @@ export default function Dashboard() {
             </div>
 
             <div className="mt-7.5">
-              <DayTasks
-                day={selectedDay}
-                tasks={dayTasks}
-                onViewAll={() =>
-                  showAllWeeks
-                    ? allWeeksRef.current?.scrollIntoView({
-                        behavior: "smooth",
-                        block: "start",
-                      })
-                    : setShowAllWeeks(true)
-                }
-              />
+              <DayTasks key={selectedDay} day={selectedDay} tasks={dayTasks} />
             </div>
-            {/* {showAllWeeks && (
-              <div ref={allWeeksRef} className="mt-12 scroll-mt-6">
-                <WeekList
-                  weeks={weeks}
-                  focusWeek={week ? weekStart : undefined}
-                />
-              </div>
-            )} */}
           </>
+        )}
+        </>
         )}
       </main>
 
-      <AddTaskFab />
+      {!searching && <AddTaskFab />}
     </div>
   );
 }
