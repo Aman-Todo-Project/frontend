@@ -51,7 +51,8 @@ export default function Dashboard() {
     (location.state as { searchPushed?: boolean } | null)?.searchPushed,
   );
   const openSearch = () => {
-    if (!searching) setParams({ search: "" }, { state: { searchPushed: true } });
+    if (!searching)
+      setParams({ search: "" }, { state: { searchPushed: true } });
   };
   const setQuery = (value: string) =>
     setParams({ search: value }, { replace: true, state: location.state });
@@ -122,7 +123,9 @@ export default function Dashboard() {
     <StatCards
       completed={week?.completedTasks ?? 0}
       open={week?.openTasks ?? 0}
-      caption={isCurrentWeek ? "This Week" : formatWeekRange(weekStart, weekEnd)}
+      caption={
+        isCurrentWeek ? "This Week" : formatWeekRange(weekStart, weekEnd)
+      }
     />
   );
   const weeklyProgress = (
@@ -148,7 +151,10 @@ export default function Dashboard() {
         <header className="sticky top-0 z-30 border-b border-divider bg-white">
           <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3 sm:h-18 sm:flex-nowrap sm:px-8 sm:py-0">
             <Logo />
-            <div ref={searchBoxRef} className="relative order-last w-full sm:order-none sm:ml-auto sm:max-w-md">
+            <div
+              ref={searchBoxRef}
+              className="relative order-last w-full sm:order-none sm:ml-auto sm:max-w-md"
+            >
               <SearchInput
                 value={query}
                 onChange={setQuery}
@@ -174,29 +180,7 @@ export default function Dashboard() {
 
         <main className="mx-auto grid max-w-6xl gap-4 px-4 py-4 sm:gap-6 sm:px-8 sm:py-8 lg:grid-cols-[minmax(0,1fr)_360px]">
           <div className="min-w-0 space-y-4 sm:space-y-6">
-            <Panel>
-              <div className="mb-4 flex items-center justify-between gap-4">
-                <h1 className="text-18 font-semibold text-text-placeholder">
-                  {formatMonthYear(selectedDay)}
-                </h1>
-                <div className="flex items-center gap-1">
-                  <WeekNavButton label="Previous week" onClick={() => changeWeek(-1)}>
-                    <ChevronLeft className="size-5" />
-                  </WeekNavButton>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedDay(todayKey())}
-                    className="h-8 px-3 text-13 text-blue transition-colors hover:bg-card-complete focus-visible:outline-2 focus-visible:outline-blue"
-                  >
-                    Today
-                  </button>
-                  <WeekNavButton label="Next week" onClick={() => changeWeek(1)}>
-                    <ChevronRight className="size-5" />
-                  </WeekNavButton>
-                </div>
-              </div>
-              {weekStrip}
-            </Panel>
+            <Panel>{weekStrip}</Panel>
 
             <Panel>
               {loading ? (
@@ -296,10 +280,22 @@ export default function Dashboard() {
 
 /** White desktop panel, square corners like the Figma inputs and cards. */
 function Panel({ children }: { children: ReactNode }) {
-  return <section className="border border-border-input bg-white p-4 sm:p-6">{children}</section>;
+  return (
+    <section className="border border-border-input bg-white p-4 sm:p-6">
+      {children}
+    </section>
+  );
 }
 
-function WeekNavButton({ label, onClick, children }: { label: string; onClick: () => void; children: ReactNode }) {
+function WeekNavButton({
+  label,
+  onClick,
+  children,
+}: {
+  label: string;
+  onClick: () => void;
+  children: ReactNode;
+}) {
   return (
     <button
       type="button"
